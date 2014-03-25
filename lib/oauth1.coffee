@@ -159,26 +159,13 @@ class OAuth1 extends OAuthBase
 		if ! @_parameters.oauthio.oauth_token || ! @_parameters.oauthio.oauth_token_secret
 			return callback new check.Error "You must provide 'oauth_token' and 'oauth_token_secret' in 'oauthio' http header"
 
-		oauthrequest = @_provider.oauth1.request
-
-		options =
-			method: req.method
-			followAllRedirects: true
-
+		configuration = @_provider.oauth1.request
+		options = @_buildServerRequestOptions(req, configuration)
 		options.oauth =
 			consumer_key: @_parameters.client_id
 			consumer_secret: @_parameters.client_secret
 			token: @_parameters.oauthio.oauth_token
 			token_secret: @_parameters.oauthio.oauth_token_secret
-
-		options.url = @_buildServerRequestUrl(req.params[1], oauthrequest.url)
-		options.qs = @_buildServerRequestQuery(req.query, oauthrequest.query)
-		options.headers = @_buildServerRequestHeaders(req.headers, oauthrequest.headers)
-
-		# build body
-		if req.method == "PATCH" || req.method == "POST" || req.method == "PUT"
-			options.body = req._body || req.body
-			delete options.body if typeof options.body == 'object'
 
 		# do request
 		callback null, request(options)

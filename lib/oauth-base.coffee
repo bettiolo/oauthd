@@ -68,6 +68,17 @@ class OAuthBase
 		url += "?" + querystring.stringify(query)
 		return { url: url, state: stateId }
 
+	_buildServerRequestOptions: (req, configuration) ->
+		options =
+			method: req.method
+			followAllRedirects: true
+			url: @_buildServerRequestUrl(req.params[1], configuration.url)
+			qs: @_buildServerRequestQuery(req.query, configuration.query)
+			headers: @_buildServerRequestHeaders(req.headers, configuration.headers)
+			body: @_buildServerRequestBody(req)
+		delete options.body if typeof options.body == 'object'
+		return options
+
 	_buildServerRequestUrl: (encodedURI, configurationUrl) ->
 		url = decodeURIComponent(encodedURI)
 		if ! url.match(/^[a-z]{2,16}:\/\//)
@@ -93,5 +104,9 @@ class OAuthBase
 			param = @_replaceParam(placeholder, @_parameters.oauthio)
 			headers[parameterName] = param if param
 		return headers
+
+	_buildServerRequestBody: (req) ->
+		if req.method == "PATCH" || req.method == "POST" || req.method == "PUT"
+			return req._body || req.body
 
 module.exports = OAuthBase

@@ -6,7 +6,7 @@
 		"authorize": "https://www.facebook.com/dialog/oauth",
 		"access_token": "/oauth/access_token",
 		"request": {
-			"cors": true,
+			"cors": false,
 			"query": {
 				"access_token": "{{token}}"
 			}
