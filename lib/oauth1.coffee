@@ -26,6 +26,7 @@ class OAuth1 extends OAuthBase
 		super 'oauth1', provider, parameters
 
 	authorize: (opts, callback) ->
+		console.log('AUTHORIZE')
 		@_createState @_provider, opts, (err, state) =>
 			return callback err if err
 			@_getRequestToken state, opts, callback
@@ -72,6 +73,7 @@ class OAuth1 extends OAuthBase
 				callback null, @_buildAuthorizeUrl(configuration.url, query, state.id)
 
 	access_token: (state, req, response_type, callback) ->
+		console.log('ACCESS TOKEN')
 		if not req.params.oauth_token && not req.params.error
 			req.params.error_description ?= 'Authorization refused'
 
@@ -130,25 +132,14 @@ class OAuth1 extends OAuthBase
 			responseParser.parse (err, response) =>
 				return callback err if err
 
-				expire = response.body.expire
-				expire ?= response.body.expires
-				expire ?= response.body.expires_in
-				expire ?= response.body.expires_at
-				if expire
-					expire = parseInt expire
-					now = (new Date).getTime()
-					expire -= now if expire > now
-				requestclone = {}
-				requestclone[k] = v for k, v of @_provider.oauth1.request
-				for k, v of @_params
-					if v.scope == 'public'
-						requestclone.parameters ?= {}
-						requestclone.parameters[k] = @_parameters[k]
+				expire = @_getExpireParameter(response)
+				requestclone = @_cloneRequest(@_provider.oauth1.request)
 				result =
 					oauth_token: response.oauth_token
 					oauth_token_secret: response.oauth_token_secret
 					expires_in: expire
 					request: requestclone
+
 				for extra in (configuration.extra||[])
 					result[extra] = response.body[extra] if response.body[extra]
 				for extra in (@_provider.oauth1.authorize.extra||[])

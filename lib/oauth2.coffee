@@ -68,25 +68,19 @@ class OAuth2 extends OAuthBase
 
 		# do request to access_token
 		request options, (e, r, body) =>
-			return callback e if e
+			return callback(e) if e
 			responseParser = new OAuth2ResponseParser(r, body, headers["Accept"], 'access_token')
 			responseParser.parse (err, response) =>
 				return callback err if err
 
-				expire = response.body.expire
-				expire ?= response.body.expires
-				expire ?= response.body.expires_in
-				expire ?= response.body.expires_at
-				if expire
-					expire = parseInt expire
-					now = (new Date).getTime()
-					expire -= now if expire > now
+				expire = @_getExpireParameter(response)
 				requestclone = {}
 				requestclone[k] = v for k, v of @_provider.oauth2.request
 				for k, v of @_params
 					if v.scope == 'public'
 						requestclone.parameters ?= {}
 						requestclone.parameters[k] = @_parameters[k]
+
 				result =
 					access_token: response.access_token
 					token_type: response.body.token_type
@@ -94,6 +88,7 @@ class OAuth2 extends OAuthBase
 					base: @_provider.baseurl
 					request: requestclone
 				result.refresh_token = response.body.refresh_token if response.body.refresh_token && response_type == "code"
+
 				for extra in (configuration.extra||[])
 					result[extra] = response.body[extra] if response.body[extra]
 				for extra in (@_provider.oauth2.authorize.extra||[])
@@ -128,14 +123,7 @@ class OAuth2 extends OAuthBase
 			responseParser.parse (err, response) ->
 				return callback err if err
 
-				expire = response.body.expire
-				expire ?= response.body.expires
-				expire ?= response.body.expires_in
-				expire ?= response.body.expires_at
-				if expire
-					expire = parseInt expire
-					now = (new Date).getTime()
-					expire -= now if expire > now
+				expire = @_getExpireParameter(response)
 				result =
 					access_token: response.access_token
 					token_type: response.body.token_type

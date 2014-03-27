@@ -97,4 +97,27 @@ class OAuthBase
 			headers[parameterName] = param if param
 		return headers
 
+	_getExpireParameter: (response) ->
+		expire = response.body.expire
+		expire ?= response.body.expires
+		expire ?= response.body.expires_in
+		expire ?= response.body.expires_at
+		if expire
+			expire = parseInt expire
+			now = (new Date).getTime()
+			expire -= now if expire > now
+		return expire
+
+	_cloneRequest: (requestConfiguration) ->
+		clonedRequest = {}
+		clonedRequest[k] = v for k, v of requestConfiguration
+		console.log('REQUESTCLONE:')
+		console.log(JSON.stringify(clonedRequest, null, 2))
+		for k, v of @_params
+			if v.scope == 'public'
+				clonedRequest.parameters ?= {}
+				clonedRequest.parameters[k] = @_parameters[k]
+		console.log(JSON.stringify(clonedRequest, null, 2))
+		return clonedRequest
+
 module.exports = OAuthBase
