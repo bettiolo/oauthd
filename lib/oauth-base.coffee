@@ -120,13 +120,10 @@ class OAuthBase
 	_cloneRequest: (requestConfiguration) ->
 		clonedRequest = {}
 		clonedRequest[k] = v for k, v of requestConfiguration
-		console.log('REQUESTCLONE:')
-		console.log(JSON.stringify(clonedRequest, null, 2))
 		for k, v of @_params
 			if v.scope == 'public'
 				clonedRequest.parameters ?= {}
 				clonedRequest.parameters[k] = @_parameters[k]
-		console.log(JSON.stringify(clonedRequest, null, 2))
 		return clonedRequest
 
 module.exports = OAuthBase

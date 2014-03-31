@@ -74,12 +74,7 @@ class OAuth2 extends OAuthBase
 				return callback err if err
 
 				expire = @_getExpireParameter(response)
-				requestclone = {}
-				requestclone[k] = v for k, v of @_provider.oauth2.request
-				for k, v of @_params
-					if v.scope == 'public'
-						requestclone.parameters ?= {}
-						requestclone.parameters[k] = @_parameters[k]
+				requestclone = @_cloneRequest(@_provider.oauth2.request)
 
 				result =
 					access_token: response.access_token
